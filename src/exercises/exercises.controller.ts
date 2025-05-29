@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ExercisesService } from './exercises.service';
 import { Exercise } from './exercises.entity';
@@ -13,5 +13,13 @@ export class ExercisesController {
   @Get()
   public getAll() {
     return this.exercisesService.findAll();
+  }
+
+  @ApiOperation({ summary: 'Get exercise by id' })
+  @ApiResponse({ status: 200, type: Exercise })
+  @Get(':id')
+  public getById(@Param('id') id: string) {
+    const parsedId = parseInt(id, 10);
+    return this.exercisesService.findById(parsedId);
   }
 }

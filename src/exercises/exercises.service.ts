@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Exercise } from './exercises.entity';
 import { Repository } from 'typeorm';
+import { Exercise } from './exercises.entity';
 
 @Injectable()
 export class ExercisesService {
@@ -12,5 +12,9 @@ export class ExercisesService {
 
   public async findAll(): Promise<Exercise[]> {
     return await this.usersRepository.find();
+  }
+
+  public async findById(id: number): Promise<Exercise | null> {
+    return await this.usersRepository.findOneBy({ id });
   }
 }
