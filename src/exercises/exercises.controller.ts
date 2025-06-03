@@ -1,7 +1,7 @@
 import { Controller, Get, HttpStatus, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ExercisesService } from './exercises.service';
-import { Exercise } from './exercises.entity';
+import { Exercise } from './entities/exercises.entity';
 
 @ApiTags('Exercises')
 @Controller('exercises')

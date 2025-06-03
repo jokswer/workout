@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { TemplateExercise } from 'src/templates/entities/template_exercises.entity';
 
 @Entity('exercises')
 export class Exercise {
@@ -14,4 +15,7 @@ export class Exercise {
   })
   @Column({ type: 'varchar', length: 255, nullable: false })
   name: string;
+
+  @OneToMany(() => TemplateExercise, (te) => te.exercise)
+  templateExercises: TemplateExercise[];
 }
