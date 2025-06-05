@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { CreateTemplateDto } from './schemas/createTemplate.schema';
 import { Template } from './entities/templates.entity';
 import { TemplateExercise } from './entities/template_exercises.entity';
-import { CreateTemplateDto } from './dtos/createTemplate.dto';
 import { TemplateExercisesSets } from './entities/template_exercises_sets.entity';
 
 @Injectable()
