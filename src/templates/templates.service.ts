@@ -28,11 +28,6 @@ export class TemplatesService {
 
       return manager.findOne(Template, {
         where: { id: template.id },
-        relations: [
-          'exercises',
-          'exercises.exercise',
-          'exercises.templateExercisesSets',
-        ],
       });
     });
   }
