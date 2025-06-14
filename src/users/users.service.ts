@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { TParsedUser } from 'src/auth/auth.service';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -12,11 +13,18 @@ export class UsersService {
 
   public async getUserByTelegramId(id: number) {
     return await this.userRepository.findOneBy({
-      tgUserId: id,
+      tgUserId: id ? id : IsNull(),
     });
   }
 
-  public async createUser(userData: any) {
+  public async getUserById(id: string) {
+    const user = await this.userRepository.findOneBy({
+      id: id ? id : IsNull(),
+    });
+    return user;
+  }
+
+  public async createUser(userData: TParsedUser) {
     const newUser = this.userRepository.create({
       tgUserId: userData.id,
       firstName: userData.first_name,
