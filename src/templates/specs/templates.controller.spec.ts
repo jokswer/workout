@@ -45,7 +45,7 @@ describe('TemplatesController', () => {
 
     await controller.createTemplate(dto);
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(service.createUserTemplate).toHaveBeenCalledWith(dto);
   });
 
   it('should return the created template', async () => {

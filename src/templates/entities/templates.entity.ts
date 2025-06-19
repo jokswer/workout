@@ -15,8 +15,9 @@ export class Template {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // @Column({ type: 'uuid', nullable: false })
-  // userId: string;
+  @ApiProperty()
+  @Column({ name: 'user_id', type: 'uuid', nullable: false })
+  userId: string;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 255, nullable: false })

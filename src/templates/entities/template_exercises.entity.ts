@@ -50,5 +50,5 @@ export class TemplateExercise {
   exercise: Exercise;
 
   @OneToMany(() => TemplateExercisesSets, (sets) => sets.templateExercise)
-  templateExercisesSets: TemplateExercisesSets[];
+  sets: TemplateExercisesSets[];
 }

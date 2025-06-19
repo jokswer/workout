@@ -56,7 +56,7 @@ export class TemplateExercisesSets {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  @ManyToOne(() => TemplateExercise, (te) => te.templateExercisesSets, {
+  @ManyToOne(() => TemplateExercise, (te) => te.sets, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'template_exercises_id' })

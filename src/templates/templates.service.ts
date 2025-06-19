@@ -1,10 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
 import { CreateTemplateDto } from './schemas/createTemplate.schema';
 import { Template } from './entities/templates.entity';
 import { TemplateExercise } from './entities/template_exercises.entity';
 import { TemplateExercisesSets } from './entities/template_exercises_sets.entity';
+
+type TShortTemplate = Pick<Template, 'id' | 'name' | 'description'>;
+type TGetUserTemplateByIdArgs = {
+  userId: string;
+  templateId: string;
+};
 
 @Injectable()
 export class TemplatesService {
@@ -16,9 +22,57 @@ export class TemplatesService {
     private readonly templateExerciseRepository: Repository<TemplateExercise>,
   ) {}
 
-  public async create(dto: CreateTemplateDto): Promise<Template | null> {
+  public async getAllUserTemplates(userId: string): Promise<TShortTemplate[]> {
+    return await this.templateRepository.find({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+      },
+      where: { userId: userId ?? IsNull() },
+    });
+  }
+
+  public async getUserTemplateById({
+    userId,
+    templateId,
+  }: TGetUserTemplateByIdArgs) {
+    return await this.templateRepository.findOne({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        exercises: {
+          id: true,
+          position: true,
+          sets: {
+            id: true,
+            position: true,
+            defaultReps: true,
+            defaultWeight: true,
+            defaultTime: true,
+          },
+        },
+      },
+      relations: {
+        exercises: {
+          exercise: true,
+          sets: true,
+        },
+      },
+      where: {
+        id: templateId ?? IsNull(),
+        userId: userId ?? IsNull(),
+      },
+    });
+  }
+
+  public async createUserTemplate(
+    dto: CreateTemplateDto,
+    userId: string,
+  ): Promise<TShortTemplate | null> {
     return await this.dataSource.transaction(async (manager) => {
-      const template = await this.createTemplate(manager, dto);
+      const template = await this.createTemplate(manager, dto, userId);
       const templateExercises = await this.createTemplateExercises(
         manager,
         template.id,
@@ -27,6 +81,11 @@ export class TemplatesService {
       await this.createTemplateExerciseSets(manager, templateExercises, dto);
 
       return manager.findOne(Template, {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
         where: { id: template.id },
       });
     });
@@ -35,10 +94,12 @@ export class TemplatesService {
   private async createTemplate(
     manager: EntityManager,
     dto: CreateTemplateDto,
+    userId: string,
   ): Promise<Template> {
     const template = manager.create(Template, {
       name: dto.name,
       description: dto.description,
+      userId,
     });
     return await manager.save(template);
   }
