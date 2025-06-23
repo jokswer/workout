@@ -7,7 +7,7 @@ import { TemplateExercise } from './entities/template_exercises.entity';
 import { TemplateExercisesSets } from './entities/template_exercises_sets.entity';
 
 type TShortTemplate = Pick<Template, 'id' | 'name' | 'description'>;
-type TGetUserTemplateByIdArgs = {
+type TUserTemplateByIdArgs = {
   userId: string;
   templateId: string;
 };
@@ -36,7 +36,7 @@ export class TemplatesService {
   public async getUserTemplateById({
     userId,
     templateId,
-  }: TGetUserTemplateByIdArgs) {
+  }: TUserTemplateByIdArgs) {
     return await this.templateRepository.findOne({
       select: {
         id: true,
@@ -65,6 +65,13 @@ export class TemplatesService {
         userId: userId ?? IsNull(),
       },
     });
+  }
+
+  public async deleteUserTemplateById({
+    userId,
+    templateId,
+  }: TUserTemplateByIdArgs) {
+    return await this.templateRepository.delete({ id: templateId, userId });
   }
 
   public async createUserTemplate(

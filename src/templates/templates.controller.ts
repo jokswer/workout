@@ -2,6 +2,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -69,5 +70,18 @@ export class TemplatesController {
     }
 
     return this.exercisesService.getUserTemplateById({ userId, templateId });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  public deleteTemplateById(@Req() req: Request) {
+    const userId = req.user?.id;
+    const templateId = req.params.id;
+
+    if (!userId || !templateId) {
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
+
+    return this.exercisesService.deleteUserTemplateById({ userId, templateId });
   }
 }
