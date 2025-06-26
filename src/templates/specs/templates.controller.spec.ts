@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TemplatesController } from '../templates.controller';
 import { TemplatesService } from '../templates.service';
-import { CreateTemplateDto } from '../schemas/createTemplate.schema';
+import { TemplateDto } from '../schemas/template.schema';
 
 const mockTemplate = {
   id: 1,
@@ -38,7 +38,7 @@ describe('TemplatesController', () => {
   });
 
   it('should call service.create with dto', async () => {
-    const dto: CreateTemplateDto = {
+    const dto: TemplateDto = {
       name: 'Template 1',
       exercises: [],
     };
@@ -49,7 +49,7 @@ describe('TemplatesController', () => {
   });
 
   it('should return the created template', async () => {
-    const dto: CreateTemplateDto = {
+    const dto: TemplateDto = {
       name: 'Template 1',
       exercises: [],
     };

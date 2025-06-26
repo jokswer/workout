@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
-import { CreateTemplateDto } from './schemas/createTemplate.schema';
+import {
+  DataSource,
+  DeleteResult,
+  EntityManager,
+  In,
+  IsNull,
+  Repository,
+} from 'typeorm';
+import { SetsDto, TemplateDto } from './schemas/template.schema';
 import { Template } from './entities/templates.entity';
 import { TemplateExercise } from './entities/template_exercises.entity';
 import { TemplateExercisesSets } from './entities/template_exercises_sets.entity';
@@ -10,6 +17,9 @@ type TShortTemplate = Pick<Template, 'id' | 'name' | 'description'>;
 type TUserTemplateByIdArgs = {
   userId: string;
   templateId: string;
+};
+type TEditUserTemplateByIdArgs = TUserTemplateByIdArgs & {
+  editTemplateDto: TemplateDto;
 };
 
 @Injectable()
@@ -36,7 +46,7 @@ export class TemplatesService {
   public async getUserTemplateById({
     userId,
     templateId,
-  }: TUserTemplateByIdArgs) {
+  }: TUserTemplateByIdArgs): Promise<Template | null> {
     return await this.templateRepository.findOne({
       select: {
         id: true,
@@ -70,12 +80,32 @@ export class TemplatesService {
   public async deleteUserTemplateById({
     userId,
     templateId,
-  }: TUserTemplateByIdArgs) {
+  }: TUserTemplateByIdArgs): Promise<DeleteResult> {
     return await this.templateRepository.delete({ id: templateId, userId });
   }
 
+  public async editUserTemplateById({
+    userId,
+    templateId,
+    editTemplateDto,
+  }: TEditUserTemplateByIdArgs) {
+    return await this.dataSource.transaction(async (manager) => {
+      await this.editTemplate(manager, editTemplateDto, userId, templateId);
+      await this.editTemplateExercises(manager, templateId, editTemplateDto);
+
+      return manager.findOne(Template, {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
+        where: { id: templateId, userId },
+      });
+    });
+  }
+
   public async createUserTemplate(
-    dto: CreateTemplateDto,
+    dto: TemplateDto,
     userId: string,
   ): Promise<TShortTemplate | null> {
     return await this.dataSource.transaction(async (manager) => {
@@ -93,14 +123,14 @@ export class TemplatesService {
           name: true,
           description: true,
         },
-        where: { id: template.id },
+        where: { id: template.id, userId },
       });
     });
   }
 
   private async createTemplate(
     manager: EntityManager,
-    dto: CreateTemplateDto,
+    dto: TemplateDto,
     userId: string,
   ): Promise<Template> {
     const template = manager.create(Template, {
@@ -114,7 +144,7 @@ export class TemplatesService {
   private async createTemplateExercises(
     manager: EntityManager,
     templateId: string,
-    dto: CreateTemplateDto,
+    dto: TemplateDto,
   ): Promise<TemplateExercise[]> {
     const templateExercises = dto.exercises.map((ex) =>
       manager.create(TemplateExercise, {
@@ -130,8 +160,8 @@ export class TemplatesService {
   private async createTemplateExerciseSets(
     manager: EntityManager,
     templateExercises: TemplateExercise[],
-    dto: CreateTemplateDto,
-  ): Promise<void> {
+    dto: TemplateDto,
+  ) {
     const map = new Map(
       templateExercises.map((rel) => [
         `${rel.exerciseId}-${rel.position}`,
@@ -154,5 +184,89 @@ export class TemplatesService {
     });
 
     await manager.save(sets);
+  }
+
+  private async editTemplate(
+    manager: EntityManager,
+    dto: TemplateDto,
+    userId: string,
+    templateId: string,
+  ) {
+    await manager.update(
+      Template,
+      { id: templateId, userId },
+      {
+        name: dto.name,
+        description: dto.description,
+      },
+    );
+  }
+
+  private async editTemplateExercises(
+    manager: EntityManager,
+    templateId: string,
+    dto: TemplateDto,
+  ) {
+    const exercises = await manager.find(TemplateExercise, {
+      select: {
+        id: true,
+      },
+      where: { templateId },
+    });
+    const exercisesIds = exercises.map((ex) => ex.id);
+    const dtoExercisesIds = dto.exercises.map((ex) => ex.id);
+    const exercisesToDelete = exercisesIds.filter(
+      (id) => !dtoExercisesIds.includes(id),
+    );
+
+    if (exercisesToDelete.length) {
+      await manager.delete(TemplateExercise, {
+        id: In(exercisesToDelete),
+      });
+    }
+
+    for (const ex of dto.exercises) {
+      const exercise = await manager.save(TemplateExercise, {
+        id: ex.id,
+        templateId,
+        exerciseId: ex.exerciseId,
+        position: ex.position,
+      });
+
+      await this.editTemplateExerciseSets(manager, exercise, ex.sets);
+    }
+  }
+
+  private async editTemplateExerciseSets(
+    manager: EntityManager,
+    exercise: TemplateExercise,
+    setsDto: SetsDto[] = [],
+  ) {
+    const sets = await manager.find(TemplateExercisesSets, {
+      select: {
+        id: true,
+      },
+      where: { templateExercisesId: exercise.id },
+    });
+    const setsIds = sets.map((set) => set.id);
+    const dtoSetsIds = setsDto.map((set) => set.id);
+    const setsToDelete = setsIds.filter((id) => !dtoSetsIds.includes(id));
+
+    if (setsToDelete.length) {
+      await manager.delete(TemplateExercisesSets, {
+        id: In(setsToDelete),
+      });
+    }
+
+    for (const setDto of setsDto) {
+      await manager.save(TemplateExercisesSets, {
+        id: setDto.id,
+        templateExercisesId: exercise.id,
+        position: setDto.position,
+        defaultReps: setDto.defaultReps,
+        defaultWeight: setDto.defaultWeight,
+        defaultTime: setDto.defaultTime,
+      });
+    }
   }
 }
