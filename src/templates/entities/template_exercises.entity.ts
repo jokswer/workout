@@ -24,7 +24,7 @@ export class TemplateExercise {
   templateId: string;
 
   @ApiProperty()
-  @Column({ name: 'exercise_id', type: 'int' })
+  @Column({ name: 'exercise_id', type: 'int', nullable: false })
   exerciseId: number;
 
   @ApiProperty()
@@ -49,6 +49,8 @@ export class TemplateExercise {
   @JoinColumn({ name: 'exercise_id' })
   exercise: Exercise;
 
-  @OneToMany(() => TemplateExercisesSets, (sets) => sets.templateExercise)
+  @OneToMany(() => TemplateExercisesSets, (sets) => sets.templateExercise, {
+    cascade: true,
+  })
   sets: TemplateExercisesSets[];
 }

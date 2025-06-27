@@ -28,8 +28,6 @@ export class TemplatesService {
     private readonly dataSource: DataSource,
     @InjectRepository(Template)
     private readonly templateRepository: Repository<Template>,
-    @InjectRepository(TemplateExercise)
-    private readonly templateExerciseRepository: Repository<TemplateExercise>,
   ) {}
 
   public async getAllUserTemplates(userId: string): Promise<TShortTemplate[]> {
@@ -43,11 +41,11 @@ export class TemplatesService {
     });
   }
 
-  public async getUserTemplateById({
+  public getUserTemplateById({
     userId,
     templateId,
   }: TUserTemplateByIdArgs): Promise<Template | null> {
-    return await this.templateRepository.findOne({
+    return this.templateRepository.findOne({
       select: {
         id: true,
         name: true,
@@ -77,19 +75,19 @@ export class TemplatesService {
     });
   }
 
-  public async deleteUserTemplateById({
+  public deleteUserTemplateById({
     userId,
     templateId,
   }: TUserTemplateByIdArgs): Promise<DeleteResult> {
-    return await this.templateRepository.delete({ id: templateId, userId });
+    return this.templateRepository.delete({ id: templateId, userId });
   }
 
-  public async editUserTemplateById({
+  public editUserTemplateById({
     userId,
     templateId,
     editTemplateDto,
   }: TEditUserTemplateByIdArgs) {
-    return await this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       await this.editTemplate(manager, editTemplateDto, userId, templateId);
       await this.editTemplateExercises(manager, templateId, editTemplateDto);
 
@@ -104,11 +102,11 @@ export class TemplatesService {
     });
   }
 
-  public async createUserTemplate(
+  public createUserTemplate(
     dto: TemplateDto,
     userId: string,
   ): Promise<TShortTemplate | null> {
-    return await this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       const template = await this.createTemplate(manager, dto, userId);
       const templateExercises = await this.createTemplateExercises(
         manager,

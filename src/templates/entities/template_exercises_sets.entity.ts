@@ -26,7 +26,7 @@ export class TemplateExercisesSets {
 
   @ApiProperty()
   @Column({ name: 'default_reps', type: 'smallint', nullable: true })
-  defaultReps: number;
+  defaultReps?: number;
 
   @ApiProperty()
   @Column({
@@ -36,7 +36,7 @@ export class TemplateExercisesSets {
     scale: 2,
     nullable: true,
   })
-  defaultWeight: number;
+  defaultWeight?: number;
 
   @ApiProperty()
   @Column({
@@ -46,7 +46,7 @@ export class TemplateExercisesSets {
     scale: 2,
     nullable: true,
   })
-  defaultTime: number;
+  defaultTime?: number;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

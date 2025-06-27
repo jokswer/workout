@@ -25,7 +25,7 @@ export class Template {
 
   @ApiProperty()
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description?: string;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
@@ -35,6 +35,8 @@ export class Template {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  @OneToMany(() => TemplateExercise, (te) => te.template)
+  @OneToMany(() => TemplateExercise, (te) => te.template, {
+    cascade: true,
+  })
   exercises: TemplateExercise[];
 }
