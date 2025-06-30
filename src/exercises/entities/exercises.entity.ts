@@ -6,13 +6,10 @@ import { TemplateExercise } from 'src/templates/entities/template_exercises.enti
 export class Exercise {
   @ApiProperty({
     example: 1,
-    description: 'Unique identifier for the exercise',
   })
   @PrimaryGeneratedColumn({ type: 'int4' })
   id: number;
-  @ApiProperty({
-    example: 'Армейский жим',
-  })
+  @ApiProperty()
   @Column({ type: 'varchar', length: 255, nullable: false })
   name: string;
 

@@ -12,8 +12,14 @@ import { SetsDto, TemplateDto } from './schemas/template.schema';
 import { Template } from './entities/templates.entity';
 import { TemplateExercise } from './entities/template_exercises.entity';
 import { TemplateExercisesSets } from './entities/template_exercises_sets.entity';
+import {
+  ShortTemplateDto,
+  shortTemplateMapper,
+  TemplateDetailsDto,
+  templateDetailsMapper,
+  templatesListMapper,
+} from './mappers/mappers';
 
-type TShortTemplate = Pick<Template, 'id' | 'name' | 'description'>;
 type TUserTemplateByIdArgs = {
   userId: string;
   templateId: string;
@@ -30,8 +36,10 @@ export class TemplatesService {
     private readonly templateRepository: Repository<Template>,
   ) {}
 
-  public async getAllUserTemplates(userId: string): Promise<TShortTemplate[]> {
-    return await this.templateRepository.find({
+  public async getAllUserTemplates(
+    userId: string,
+  ): Promise<ShortTemplateDto[]> {
+    const templates = await this.templateRepository.find({
       select: {
         id: true,
         name: true,
@@ -39,13 +47,15 @@ export class TemplatesService {
       },
       where: { userId: userId ?? IsNull() },
     });
+
+    return templatesListMapper(templates);
   }
 
-  public getUserTemplateById({
+  public async getUserTemplateById({
     userId,
     templateId,
-  }: TUserTemplateByIdArgs): Promise<Template | null> {
-    return this.templateRepository.findOne({
+  }: TUserTemplateByIdArgs): Promise<TemplateDetailsDto | null> {
+    const template = await this.templateRepository.findOne({
       select: {
         id: true,
         name: true,
@@ -73,6 +83,12 @@ export class TemplatesService {
         userId: userId ?? IsNull(),
       },
     });
+
+    if (!template) {
+      return null;
+    }
+
+    return templateDetailsMapper(template);
   }
 
   public deleteUserTemplateById({
@@ -82,12 +98,12 @@ export class TemplatesService {
     return this.templateRepository.delete({ id: templateId, userId });
   }
 
-  public editUserTemplateById({
+  public async editUserTemplateById({
     userId,
     templateId,
     editTemplateDto,
-  }: TEditUserTemplateByIdArgs) {
-    return this.dataSource.transaction(async (manager) => {
+  }: TEditUserTemplateByIdArgs): Promise<ShortTemplateDto | null> {
+    const template = await this.dataSource.transaction(async (manager) => {
       await this.editTemplate(manager, editTemplateDto, userId, templateId);
       await this.editTemplateExercises(manager, templateId, editTemplateDto);
 
@@ -100,12 +116,18 @@ export class TemplatesService {
         where: { id: templateId, userId },
       });
     });
+
+    if (!template) {
+      return null;
+    }
+
+    return shortTemplateMapper(template);
   }
 
   public createUserTemplate(
     dto: TemplateDto,
     userId: string,
-  ): Promise<TShortTemplate | null> {
+  ): Promise<ShortTemplateDto | null> {
     return this.dataSource.transaction(async (manager) => {
       const template = await this.createTemplate(manager, dto, userId);
       const templateExercises = await this.createTemplateExercises(
@@ -115,7 +137,7 @@ export class TemplatesService {
       );
       await this.createTemplateExerciseSets(manager, templateExercises, dto);
 
-      return manager.findOne(Template, {
+      const newTemplate = await manager.findOne(Template, {
         select: {
           id: true,
           name: true,
@@ -123,6 +145,12 @@ export class TemplatesService {
         },
         where: { id: template.id, userId },
       });
+
+      if (!newTemplate) {
+        return null;
+      }
+
+      return shortTemplateMapper(newTemplate);
     });
   }
 

@@ -1,5 +1,5 @@
-import { Controller, Get, HttpStatus, Param } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param } from '@nestjs/common';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ExercisesService } from './exercises.service';
 import { Exercise } from './entities/exercises.entity';
 
@@ -9,14 +9,14 @@ export class ExercisesController {
   constructor(private readonly exercisesService: ExercisesService) {}
 
   @ApiOperation({ summary: 'Get all exercises' })
-  @ApiResponse({ status: HttpStatus.OK, type: [Exercise] })
+  @ApiOkResponse({ type: [Exercise] })
   @Get()
   public getAll() {
     return this.exercisesService.findAll();
   }
 
   @ApiOperation({ summary: 'Get exercise by id' })
-  @ApiResponse({ status: HttpStatus.OK, type: Exercise })
+  @ApiOkResponse({ type: Exercise })
   @Get(':id')
   public getById(@Param('id') id: string) {
     const parsedId = parseInt(id, 10);

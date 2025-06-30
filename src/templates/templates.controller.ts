@@ -1,4 +1,9 @@
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiTags,
+  ApiNoContentResponse,
+} from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -6,6 +11,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Put,
   Req,
@@ -16,8 +22,8 @@ import { Request } from 'express';
 import { ZodValidationPipe } from 'src/utils/zodValidation.pipe';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { TemplatesService } from './templates.service';
-import { Template } from './entities/templates.entity';
 import { TemplateDto, TemplateSchema } from './schemas/template.schema';
+import { ShortTemplateDto, TemplateDetailsDto } from './mappers/mappers';
 
 @ApiTags('Templates')
 @Controller('templates')
@@ -25,7 +31,7 @@ export class TemplatesController {
   constructor(private readonly exercisesService: TemplatesService) {}
 
   @ApiOperation({ summary: 'Create a new template' })
-  @ApiResponse({ status: HttpStatus.OK, type: Template })
+  @ApiOkResponse({ type: ShortTemplateDto })
   @UseGuards(JwtAuthGuard)
   @Post()
   @UsePipes(new ZodValidationPipe(TemplateSchema))
@@ -45,6 +51,8 @@ export class TemplatesController {
     return this.exercisesService.createUserTemplate(createTemplateDto, userId);
   }
 
+  @ApiOperation({ summary: 'Get all user templates' })
+  @ApiOkResponse({ type: [ShortTemplateDto] })
   @UseGuards(JwtAuthGuard)
   @Get()
   public getTemplates(@Req() req: Request) {
@@ -57,58 +65,66 @@ export class TemplatesController {
     return this.exercisesService.getAllUserTemplates(userId);
   }
 
+  @ApiOperation({ summary: 'Get template by ID' })
+  @ApiOkResponse({ type: TemplateDetailsDto })
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  public getTemplateById(@Req() req: Request) {
+  public getTemplateById(@Req() req: Request, @Param('id') id: string) {
     const userId = req.user?.id;
-    const templateId = req.params.id;
 
-    if (!userId || !templateId) {
+    if (!userId || !id) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
 
-    return this.exercisesService.getUserTemplateById({ userId, templateId });
+    return this.exercisesService.getUserTemplateById({
+      userId,
+      templateId: id,
+    });
   }
 
+  @ApiOperation({ summary: 'Delete template by ID' })
+  @ApiNoContentResponse()
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  public async deleteTemplateById(@Req() req: Request) {
+  public async deleteTemplateById(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ) {
     const userId = req.user?.id;
-    const templateId = req.params.id;
 
-    if (!userId || !templateId) {
+    if (!userId || !id) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
 
     const result = await this.exercisesService.deleteUserTemplateById({
       userId,
-      templateId,
+      templateId: id,
     });
 
     if (result.affected === 0) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
-
-    return { success: true };
   }
 
+  @ApiOperation({ summary: 'Edit template by ID' })
+  @ApiOkResponse({ type: ShortTemplateDto })
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   @UsePipes(new ZodValidationPipe(TemplateSchema))
   public editTemplateById(
     @Req() req: Request,
     @Body() editTemplateDto: TemplateDto,
+    @Param('id') id: string,
   ) {
     const userId = req.user?.id;
-    const templateId = req.params.id;
 
-    if (!userId || !templateId) {
+    if (!userId || !id) {
       throw new HttpException('Not found', HttpStatus.NOT_FOUND);
     }
 
     return this.exercisesService.editUserTemplateById({
       userId,
-      templateId,
+      templateId: id,
       editTemplateDto,
     });
   }
