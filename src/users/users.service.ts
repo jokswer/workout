@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { TParsedUser } from 'src/auth/auth.service';
 import { User } from './entities/user.entity';
+import { UserDto, userMapper } from './mappers/mapper';
 
 @Injectable()
 export class UsersService {
@@ -11,17 +12,28 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  public async getUserByTelegramId(id: number) {
-    return await this.userRepository.findOneBy({
-      tgUserId: id ? id : IsNull(),
+  public async getUserByTelegramId(id: number): Promise<UserDto | null> {
+    const user = await this.userRepository.findOneBy({
+      tgUserId: id ?? IsNull(),
     });
+
+    if (!user) {
+      return null;
+    }
+
+    return userMapper(user);
   }
 
-  public async getUserById(id: string) {
+  public async getUserById(id: string): Promise<UserDto | null> {
     const user = await this.userRepository.findOneBy({
-      id: id ? id : IsNull(),
+      id: id ?? IsNull(),
     });
-    return user;
+
+    if (!user) {
+      return null;
+    }
+
+    return userMapper(user);
   }
 
   public async createUser(userData: TParsedUser) {
@@ -34,6 +46,8 @@ export class UsersService {
       photoUrl: userData.photo_url,
     });
 
-    return await this.userRepository.save(newUser);
+    const user = await this.userRepository.save(newUser);
+
+    return userMapper(user);
   }
 }

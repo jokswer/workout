@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { parse } from '@telegram-apps/init-data-node';
-import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { KeysToSnakeCase } from 'src/utils/typesTransform';
+import { UserDto } from 'src/users/mappers/mapper';
 import { authMapper } from './mappers/mapper';
 
 type TParsedInitData = ReturnType<typeof parse>;
@@ -57,7 +57,7 @@ export class AuthService {
     return await this.usersService.createUser(user);
   }
 
-  private async createToken({ id }: User) {
+  private async createToken({ id }: UserDto) {
     const payload: TJwtPayload = { userId: id };
     const accessToken = await this.jwtService.signAsync(payload);
     return accessToken;
