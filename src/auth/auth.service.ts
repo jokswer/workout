@@ -9,6 +9,7 @@ import { parse } from '@telegram-apps/init-data-node';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { KeysToSnakeCase } from 'src/utils/typesTransform';
+import { authMapper } from './mappers/mapper';
 
 type TParsedInitData = ReturnType<typeof parse>;
 export type TParsedUser = KeysToSnakeCase<
@@ -35,7 +36,7 @@ export class AuthService {
     const dbUser = await this.loginViaTelegram(user);
     const token = await this.createToken(dbUser);
 
-    return token;
+    return authMapper(token);
   }
 
   public async validateUser({ userId }: TJwtPayload) {
@@ -59,8 +60,6 @@ export class AuthService {
   private async createToken({ id }: User) {
     const payload: TJwtPayload = { userId: id };
     const accessToken = await this.jwtService.signAsync(payload);
-    return {
-      accessToken,
-    };
+    return accessToken;
   }
 }
