@@ -1,18 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
-  OneToMany,
+  ForeignKey,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ForeignKey,
 } from 'typeorm';
-import { TemplateExercise } from './template_exercises.entity';
 import { User } from 'src/users/entities/user.entity';
 
-@Entity('templates')
-export class Template {
+@Entity({ name: 'workouts' })
+export class Workout {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -23,12 +21,8 @@ export class Template {
   userId: string;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  name: string;
-
-  @ApiProperty()
-  @Column({ type: 'text', nullable: true })
-  description?: string;
+  @Column({ name: 'is_done', type: 'boolean', default: false, nullable: false })
+  isDone: boolean;
 
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
@@ -37,9 +31,4 @@ export class Template {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
-
-  @OneToMany(() => TemplateExercise, (te) => te.template, {
-    cascade: true,
-  })
-  exercises: TemplateExercise[];
 }
