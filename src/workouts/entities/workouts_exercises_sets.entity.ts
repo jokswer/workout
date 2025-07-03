@@ -25,6 +25,10 @@ export class WorkoutExerciseSet {
   position: number;
 
   @ApiProperty()
+  @Column({ name: 'is_done', type: 'boolean', default: false, nullable: false })
+  isDone: boolean;
+
+  @ApiProperty()
   @Column({ name: 'reps', type: 'smallint', nullable: true })
   reps?: number;
 
