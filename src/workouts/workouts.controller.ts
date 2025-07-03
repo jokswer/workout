@@ -1,6 +1,20 @@
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
+import { Request } from 'express';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/auth.guard';
+import { ZodValidationPipe } from 'src/utils/zodValidation.pipe';
 import { WorkoutsService } from './workouts.service';
+import { WorkoutDto, WorkoutSchema } from './schemas/workout.schema';
+import { ShortWorkoutDto } from './mappers/mappers';
 
 // | Метод    | Путь            | Описание                                                                   |
 // | -------- | --------------- | -------------------------------------------------------------------------- |
@@ -14,4 +28,25 @@ import { WorkoutsService } from './workouts.service';
 @Controller('workouts')
 export class WorkoutsController {
   constructor(private readonly workoutsService: WorkoutsService) {}
+
+  @ApiOperation({ summary: 'Create a new workout' })
+  @ApiOkResponse({ type: ShortWorkoutDto })
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  @UsePipes(new ZodValidationPipe(WorkoutSchema))
+  public createWorkout(
+    @Body() createWorkoutDto: WorkoutDto,
+    @Req() req: Request,
+  ) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new HttpException(
+        'User ID not found in request',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return this.workoutsService.createWorkout(userId, createWorkoutDto);
+  }
 }

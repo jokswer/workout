@@ -9,10 +9,10 @@ export class ShortTemplateDto {
   @ApiProperty()
   description?: string;
 
-  constructor(data: ShortTemplateDto) {
-    this.id = data.id;
-    this.name = data.name;
-    this.description = data.description;
+  constructor(dto: ShortTemplateDto) {
+    this.id = dto.id;
+    this.name = dto.name;
+    this.description = dto.description;
   }
 }
 
