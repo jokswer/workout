@@ -22,3 +22,6 @@ export const shortWorkoutMapper = (entity: Workout) =>
     isDone: entity.isDone,
     createdAt: entity.createdAt,
   });
+
+export const templatesListMapper = (entities: Workout[]) =>
+  entities.map((entity) => shortWorkoutMapper(entity));

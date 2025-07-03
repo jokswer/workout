@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Workout } from './entities/workouts.entity';
 import { WorkoutDto } from './schemas/workout.schema';
-import { shortWorkoutMapper } from './mappers/mappers';
+import { shortWorkoutMapper, templatesListMapper } from './mappers/mappers';
 
 @Injectable()
 export class WorkoutsService {
@@ -19,6 +19,19 @@ export class WorkoutsService {
     }
 
     return { success: true };
+  }
+
+  public async getAllUserWorkouts(userId: string) {
+    const workouts = await this.workoutsRepository.find({
+      select: {
+        id: true,
+        isDone: true,
+        createdAt: true,
+      },
+      where: { userId: userId ?? IsNull() },
+    });
+
+    return templatesListMapper(workouts);
   }
 
   private async createEmptyWorkout(userId: string) {

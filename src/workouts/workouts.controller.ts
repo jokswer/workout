@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
@@ -48,5 +49,22 @@ export class WorkoutsController {
     }
 
     return this.workoutsService.createWorkout(userId, createWorkoutDto);
+  }
+
+  @ApiOperation({ summary: 'Get all user workouts' })
+  @ApiOkResponse({ type: [ShortWorkoutDto] })
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  public getWorkouts(@Req() req: Request) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new HttpException(
+        'User ID not found in request',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return this.workoutsService.getAllUserWorkouts(userId);
   }
 }
