@@ -1,16 +1,23 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Req,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { ZodValidationPipe } from 'src/utils/zodValidation.pipe';
 import { WorkoutsService } from './workouts.service';
@@ -66,5 +73,29 @@ export class WorkoutsController {
     }
 
     return this.workoutsService.getAllUserWorkouts(userId);
+  }
+
+  @ApiOperation({ summary: 'Delete workout by ID' })
+  @ApiNoContentResponse()
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  public async deleteWorkout(@Req() req: Request, @Param('id') id: string) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new HttpException(
+        'User ID not found in request',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const result = await this.workoutsService.deleteWorkoutById({
+      userId,
+      workoutId: id,
+    });
+
+    if (result.affected === 0) {
+      throw new HttpException('Not found', HttpStatus.NOT_FOUND);
+    }
   }
 }

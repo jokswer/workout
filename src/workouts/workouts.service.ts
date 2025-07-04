@@ -5,6 +5,11 @@ import { Workout } from './entities/workouts.entity';
 import { WorkoutDto } from './schemas/workout.schema';
 import { shortWorkoutMapper, templatesListMapper } from './mappers/mappers';
 
+type TUserWorkoutByIdArgs = {
+  userId: string;
+  workoutId: string;
+};
+
 @Injectable()
 export class WorkoutsService {
   constructor(
@@ -32,6 +37,10 @@ export class WorkoutsService {
     });
 
     return templatesListMapper(workouts);
+  }
+
+  public deleteWorkoutById({ userId, workoutId }: TUserWorkoutByIdArgs) {
+    return this.workoutsRepository.delete({ id: workoutId, userId });
   }
 
   private async createEmptyWorkout(userId: string) {
