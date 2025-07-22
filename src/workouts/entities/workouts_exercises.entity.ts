@@ -18,7 +18,7 @@ export class WorkoutExercise {
 
   @ApiProperty()
   @Column({ name: 'workout_id', type: 'uuid', nullable: false })
-  @ForeignKey<Workout>(() => Workout)
+  @ForeignKey<Workout>(() => Workout, { onDelete: 'CASCADE' })
   workoutId: string;
 
   @ApiProperty()
