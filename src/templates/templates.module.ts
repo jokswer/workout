@@ -14,6 +14,7 @@ import { TemplateExercisesSets } from './entities/template_exercises_sets.entity
       TemplateExercisesSets,
     ]),
   ],
+  exports: [TemplatesService],
   providers: [TemplatesService],
   controllers: [TemplatesController],
 })

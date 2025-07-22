@@ -24,7 +24,7 @@ export class WorkoutExercise {
   @ApiProperty()
   @Column({ name: 'exercise_id', type: 'int4', nullable: false })
   @ForeignKey<Exercise>(() => Exercise)
-  exerciseId: string;
+  exerciseId: number;
 
   @ApiProperty()
   @Column({ type: 'smallint', nullable: false })
