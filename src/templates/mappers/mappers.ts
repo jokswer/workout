@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ExerciseDto } from 'src/exercises/mappers/mappers';
 import { Template } from '../entities/templates.entity';
 
 export class ShortTemplateDto {
@@ -38,20 +39,6 @@ export class TemplateExerciseSetDto {
     this.defaultReps = data.defaultReps;
     this.defaultWeight = data.defaultWeight;
     this.defaultTime = data.defaultTime;
-  }
-}
-
-// TODO: remove this mapper when WorkoutDto is ready
-export class ExerciseDto {
-  @ApiProperty()
-  id: number;
-
-  @ApiProperty()
-  name: string;
-
-  constructor(data: ExerciseDto) {
-    this.id = data.id;
-    this.name = data.name;
   }
 }
 
