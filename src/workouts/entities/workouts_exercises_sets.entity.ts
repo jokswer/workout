@@ -3,7 +3,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ForeignKey,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,11 +15,6 @@ export class WorkoutExerciseSet {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @ApiProperty()
-  @Column({ name: 'workout_exercise_id', type: 'uuid', nullable: false })
-  @ForeignKey<WorkoutExercise>(() => WorkoutExercise, { onDelete: 'CASCADE' })
-  workoutExerciseId: string;
 
   @ApiProperty()
   @Column({ type: 'smallint', nullable: false })
@@ -59,4 +55,8 @@ export class WorkoutExerciseSet {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @ManyToOne(() => WorkoutExercise, (workoutExercise) => workoutExercise.sets)
+  @JoinColumn({ name: 'workout_exercise_id' })
+  workoutExercise: WorkoutExercise;
 }

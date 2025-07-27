@@ -41,6 +41,7 @@ export class TemplateExerciseSetDto {
   }
 }
 
+// TODO: remove this mapper when WorkoutDto is ready
 export class ExerciseDto {
   @ApiProperty()
   id: number;

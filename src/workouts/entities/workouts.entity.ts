@@ -6,8 +6,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { WorkoutExercise } from './workouts_exercises.entity';
 
 @Entity({ name: 'workouts' })
 export class Workout {
@@ -31,4 +33,7 @@ export class Workout {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @OneToMany(() => WorkoutExercise, (we) => we.workout, { onDelete: 'CASCADE' })
+  workoutExercises: WorkoutExercise[];
 }

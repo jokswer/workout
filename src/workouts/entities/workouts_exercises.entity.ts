@@ -3,28 +3,21 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ForeignKey,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Exercise } from 'src/exercises/entities/exercises.entity';
 import { Workout } from './workouts.entity';
+import { WorkoutExerciseSet } from './workouts_exercises_sets.entity';
 
 @Entity({ name: 'workouts_exercises' })
 export class WorkoutExercise {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @ApiProperty()
-  @Column({ name: 'workout_id', type: 'uuid', nullable: false })
-  @ForeignKey<Workout>(() => Workout, { onDelete: 'CASCADE' })
-  workoutId: string;
-
-  @ApiProperty()
-  @Column({ name: 'exercise_id', type: 'int4', nullable: false })
-  @ForeignKey<Exercise>(() => Exercise)
-  exerciseId: number;
 
   @ApiProperty()
   @Column({ type: 'smallint', nullable: false })
@@ -37,4 +30,19 @@ export class WorkoutExercise {
   @ApiProperty()
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  @ApiProperty()
+  @ManyToOne(() => Workout, (workout) => workout.workoutExercises)
+  @JoinColumn({ name: 'workout_id' })
+  workout: Workout;
+
+  @ManyToOne(() => Exercise, (exercise) => exercise.templateExercises)
+  @JoinColumn({ name: 'exercise_id' })
+  exercise: Exercise;
+
+  @ApiProperty()
+  @OneToMany(() => WorkoutExerciseSet, (sets) => sets.workoutExercise, {
+    onDelete: 'CASCADE',
+  })
+  sets: WorkoutExerciseSet[];
 }

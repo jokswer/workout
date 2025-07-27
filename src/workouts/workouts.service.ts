@@ -6,7 +6,11 @@ import { Workout } from './entities/workouts.entity';
 import { WorkoutExercise } from './entities/workouts_exercises.entity';
 import { WorkoutExerciseSet } from './entities/workouts_exercises_sets.entity';
 import { WorkoutDto } from './schemas/workout.schema';
-import { shortWorkoutMapper, templatesListMapper } from './mappers/mappers';
+import {
+  detailsWorkoutMapper,
+  shortWorkoutMapper,
+  templatesListMapper,
+} from './mappers/mappers';
 
 type TUserWorkoutByIdArgs = {
   userId: string;
@@ -57,6 +61,37 @@ export class WorkoutsService {
     return this.workoutsRepository.delete({ id: workoutId, userId });
   }
 
+  public async getUserWorkoutById({ userId, workoutId }: TUserWorkoutByIdArgs) {
+    const workout = await this.workoutsRepository.findOne({
+      select: {
+        id: true,
+        isDone: true,
+        createdAt: true,
+        workoutExercises: {
+          id: true,
+          position: true,
+          exercise: true,
+          sets: {
+            id: true,
+            isDone: true,
+            position: true,
+            reps: true,
+            weight: true,
+            time: true,
+          },
+        },
+      },
+      relations: { workoutExercises: { sets: true, exercise: true } },
+      where: { id: workoutId ?? IsNull(), userId: userId ?? IsNull() },
+    });
+
+    if (!workout) {
+      throw new NotFoundException(`Workout with id ${workoutId} not found`);
+    }
+
+    return detailsWorkoutMapper(workout);
+  }
+
   private async createEmptyWorkout(userId: string) {
     const workout = this.workoutsRepository.create({ userId });
     return await this.workoutsRepository.save(workout);
@@ -85,7 +120,7 @@ export class WorkoutsService {
 
       for (const exercise of template?.exercises ?? []) {
         const workoutExercise = manager.create(WorkoutExercise, {
-          workoutId: workout.id,
+          workout,
           exerciseId: exercise.exercise.id,
           position: exercise.position,
         });
@@ -93,7 +128,7 @@ export class WorkoutsService {
 
         for (const set of exercise.sets ?? []) {
           const workoutExerciseSet = manager.create(WorkoutExerciseSet, {
-            workoutExerciseId: workoutExercise.id,
+            workoutExercise,
             position: set.position,
             reps: set.defaultReps,
             weight: set.defaultWeight,
