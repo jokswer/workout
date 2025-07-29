@@ -42,11 +42,7 @@ npm install
 npm run start:dev
 ```
 
-By default, the server runs on [http://localhost:3000](http://localhost:3000)
-
-### Running with Docker (optional)
-
-You can run the project using Docker by creating a Dockerfile and docker-compose configuration (not included in this repo).
+By default, the server runs on [http://localhost:4000](http://localhost:4000)
 
 ## Technologies Used
 
