@@ -1,20 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, Repository } from 'typeorm';
 import { TemplatesService } from 'src/templates/templates.service';
 import { Workout } from './entities/workouts.entity';
 import { WorkoutExercise } from './entities/workouts_exercises.entity';
 import { WorkoutExerciseSet } from './entities/workouts_exercises_sets.entity';
-import { WorkoutDto } from './schemas/workout.schema';
+import {
+  EditWorkoutDto,
+  WorkoutDto,
+  WorkoutExerciseSetDto,
+} from './schemas/workout.schema';
 import {
   detailsWorkoutMapper,
   shortWorkoutMapper,
   templatesListMapper,
+  WorkoutDetailsDto,
 } from './mappers/mappers';
 
 type TUserWorkoutByIdArgs = {
   userId: string;
   workoutId: string;
+};
+
+type TEditWorkoutByIdArgs = TUserWorkoutByIdArgs & {
+  editWorkoutDto: EditWorkoutDto;
 };
 
 type TCreateWorkoutFromTemplateArgs = {
@@ -92,6 +101,24 @@ export class WorkoutsService {
     return detailsWorkoutMapper(workout);
   }
 
+  public async editWorkoutById({
+    userId,
+    workoutId,
+    editWorkoutDto,
+  }: TEditWorkoutByIdArgs) {
+    const workout = await this.getUserWorkoutById({ userId, workoutId });
+
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(
+        Workout,
+        { id: workoutId, userId },
+        { isDone: editWorkoutDto.isDone },
+      );
+
+      await this.editWorkoutExercises(manager, workout, editWorkoutDto);
+    });
+  }
+
   private async createEmptyWorkout(userId: string) {
     const workout = this.workoutsRepository.create({ userId });
     return await this.workoutsRepository.save(workout);
@@ -140,5 +167,69 @@ export class WorkoutsService {
 
       return workout;
     });
+  }
+
+  private async editWorkoutExercises(
+    manager: EntityManager,
+    workoutDetailsDto: WorkoutDetailsDto,
+    editWorkoutDto: EditWorkoutDto,
+  ) {
+    const exercisesIds = workoutDetailsDto.workoutExercises.map((ex) => ex.id);
+    const dtoExercisesIds = editWorkoutDto.exercises?.map((ex) => ex.id);
+    const exercisesToDelete = exercisesIds.filter(
+      (id) => !dtoExercisesIds?.includes(id),
+    );
+
+    if (exercisesToDelete.length) {
+      await manager.delete(WorkoutExercise, {
+        id: In(exercisesToDelete),
+      });
+    }
+
+    if (!editWorkoutDto.exercises?.length) return;
+
+    for (const ex of editWorkoutDto.exercises) {
+      const exercise = await manager.save(WorkoutExercise, {
+        id: ex.id,
+        workoutId: workoutDetailsDto.id,
+        exerciseId: ex.exerciseId,
+        position: ex.position,
+      });
+
+      await this.editWorkoutExerciseSets(
+        manager,
+        exercise,
+        workoutDetailsDto,
+        ex.sets,
+      );
+    }
+  }
+
+  private async editWorkoutExerciseSets(
+    manager: EntityManager,
+    exercise: WorkoutExercise,
+    workoutDetailsDto: WorkoutDetailsDto,
+    setsDto: WorkoutExerciseSetDto[] = [],
+  ) {
+    const setsIds = workoutDetailsDto.workoutExercises.flatMap((set) => set.id);
+    const dtoSetsIds = setsDto.map((set) => set.id);
+    const setsToDelete = setsIds.filter((id) => !dtoSetsIds.includes(id));
+
+    if (setsToDelete.length) {
+      await manager.delete(WorkoutExerciseSet, {
+        id: In(setsToDelete),
+      });
+    }
+
+    for (const setDto of setsDto) {
+      await manager.save(WorkoutExerciseSet, {
+        id: setDto.id,
+        templateExercisesId: exercise.id,
+        position: setDto.position,
+        reps: setDto.reps,
+        weight: setDto.weight,
+        time: setDto.time,
+      });
+    }
   }
 }

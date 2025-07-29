@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   UseGuards,
   UsePipes,
@@ -21,13 +22,13 @@ import {
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { ZodValidationPipe } from 'src/utils/zodValidation.pipe';
 import { WorkoutsService } from './workouts.service';
-import { WorkoutDto, WorkoutSchema } from './schemas/workout.schema';
+import {
+  EditWorkoutDto,
+  EditWorkoutSchema,
+  WorkoutDto,
+  WorkoutSchema,
+} from './schemas/workout.schema';
 import { ShortWorkoutDto, WorkoutDetailsDto } from './mappers/mappers';
-
-// | Метод    | Путь            | Описание                                                                   |
-// | -------- | --------------- | -------------------------------------------------------------------------- |
-// | `GET`    | `/workouts`     | Список тренировок текущего пользователя (с пагинацией и фильтрами по дате) |                                       |                                 |
-// | `PUT`    | `/workouts/:id` | Обновить запись тренировки                                                 |                                                |
 
 @ApiTags('Workouts')
 @Controller('workouts')
@@ -87,6 +88,32 @@ export class WorkoutsController {
     }
 
     return this.workoutsService.getUserWorkoutById({ userId, workoutId: id });
+  }
+
+  @ApiOperation({ summary: 'Edit workout by ID' })
+  @ApiNoContentResponse()
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  @UsePipes(new ZodValidationPipe(EditWorkoutSchema))
+  public editWorkout(
+    @Req() req: Request,
+    @Body() editWorkoutDto: EditWorkoutDto,
+    @Param('id') id: string,
+  ) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new HttpException(
+        'User ID not found in request',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return this.workoutsService.editWorkoutById({
+      userId,
+      workoutId: id,
+      editWorkoutDto,
+    });
   }
 
   @ApiOperation({ summary: 'Delete workout by ID' })
